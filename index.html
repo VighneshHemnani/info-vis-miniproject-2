@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>U.S. Integrated-Circuit Imports</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <script defer src="vendor/d3.v7.9.0.min.js"></script>
+  <script defer src="dashboard.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Where U.S. Integrated-Circuit imports come from</h1>
+      <p>Explore how U.S. Integrated-Circuit import values and supplier shares changed from 2019 to 2025. Choose a product and year to compare the top six origins’ shares with their 2019 levels, then select an origin to see its import trend and product mix.</p>
+    </header>
+
+    <p id="load-message" role="status">Loading Census import data…</p>
+    <div id="dashboard" hidden>
+    <div class="dashboard-columns">
+        <div class="dashboard-column">
+        <div class="filters">
+            <label>Product <select id="product"></select></label>
+        </div>
+
+        <section class="panel" aria-labelledby="history-title">
+            <div class="panel-heading">
+            <h2 id="history-title">Imports over time</h2>
+            <div role="group" aria-label="Trend metric">
+                <button type="button" data-metric="share" aria-pressed="true">Share</button>
+                <button type="button" data-metric="value" aria-pressed="false">Value</button>
+            </div>
+            </div>
+
+            <p id="history-context"></p>
+            <div id="history-plot">
+            <svg id="history-svg" aria-hidden="true"></svg>
+            <div id="history-years" role="group" aria-label="Select a year"></div>
+            </div>
+            <p class="legend">
+            <span><i class="line-key" aria-hidden="true"></i><span id="history-reference"></span></span>
+            <span><i class="line-key dashed" aria-hidden="true"></i><span id="history-origin"></span></span>
+            </p>
+            <p id="history-detail" class="detail"></p>
+        </section>
+        </div>
+
+        <div class="dashboard-column">
+        <div class="filters year-controls">
+            <label>Year <select id="year"></select></label>
+            <button id="reset" type="button">Reset</button>
+        </div>
+
+        <section class="panel" aria-labelledby="origins-title">
+            <h2 id="origins-title">Leading origins</h2>
+            <p id="rank-context"></p>
+            <p id="rank-legend" class="legend"></p>
+            <svg id="rank-axis" height="25" aria-hidden="true"></svg>
+            <div id="ranking" role="group" aria-label="Select a leading origin"></div>
+            <p id="rank-detail" class="detail"></p>
+            <p id="origin-notice" role="status"></p>
+        </section>
+
+        <section class="panel" aria-labelledby="mix-title">
+            <h2 id="mix-title">Product mix by origin</h2>
+            <p id="mix-context"></p>
+            <div class="mix-scale" aria-hidden="true"><span>0%</span><span>100%</span></div>
+            <div id="mix" role="group" aria-label="Select a product"></div>
+            <p id="mix-detail" class="detail"></p>
+        </section>
+        </div>
+    </div>
+    <footer>
+        <p>Source: United States Census</p>
+    </footer>
+    </div>
+  </main>
+   <div id="chart-tooltip" aria-hidden="true" hidden></div>
+</body>
+</html>
