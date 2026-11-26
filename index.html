@@ -13,14 +13,17 @@
     <header>
       <h1>Where U.S. Integrated-Circuit imports come from</h1>
       <p>Explore how U.S. Integrated-Circuit import values and supplier shares changed from 2019 to 2025. Choose a product and year to compare the top six origins’ shares with their 2019 levels, then select an origin to see its import trend and product mix.</p>
+      <p class="data-note">Annual data: <span id="year-span">2019–2025</span>. Values are nominal USD (not adjusted for inflation). 2025 covers January–December.</p>
     </header>
 
     <p id="load-message" role="status">Loading Census import data…</p>
     <div id="dashboard" hidden>
+    <p id="origin-notice" role="status" aria-atomic="true"></p>
     <div class="dashboard-columns">
         <div class="dashboard-column">
         <div class="filters">
             <label>Product <select id="product"></select></label>
+            <button id="view-mix" type="button" aria-controls="product-mix-panel" hidden>View product mix ↓</button>
         </div>
 
         <section class="panel" aria-labelledby="history-title">
@@ -55,14 +58,14 @@
             <h2 id="origins-title">Leading origins</h2>
             <p id="rank-context"></p>
             <p id="rank-legend" class="legend"></p>
+            <p id="rank-change-key" class="legend"><span class="share-gain">Blue → share increased</span><span class="share-loss">Orange ← share decreased</span></p>
             <svg id="rank-axis" height="25" aria-hidden="true"></svg>
             <div id="ranking" role="group" aria-label="Select a leading origin"></div>
             <p id="rank-detail" class="detail"></p>
-            <p id="origin-notice" role="status"></p>
         </section>
 
-        <section class="panel" aria-labelledby="mix-title">
-            <h2 id="mix-title">Product mix by origin</h2>
+        <section id="product-mix-panel" class="panel" aria-labelledby="mix-title">
+            <h2 id="mix-title" tabindex="-1">Product mix by origin</h2>
             <p id="mix-context"></p>
             <div class="mix-scale" aria-hidden="true"><span>0%</span><span>100%</span></div>
             <div id="mix" role="group" aria-label="Select a product"></div>

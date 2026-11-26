@@ -136,7 +136,7 @@ async function loadCensusImports() {
     refreshTradeViews();
   });
 
-  function refreshTradeViews() {
+  function refreshTradeViews(fromResize = false) {
     hideChartTooltip();
     const block = byYearHts.get(tradeView.year).get(tradeView.hts);
     const leaders = block.ranked.slice(0, originLimit);
@@ -144,9 +144,15 @@ async function loadCensusImports() {
     const focus = leaders.find(row => row.origin === previousOrigin) ?? leaders[0];
     tradeView.origin = focus.origin;
 
-    d3.select("#origin-notice").text(previousOrigin && previousOrigin !== focus.origin
-      ? originNames.get(previousOrigin) + " is outside this top six. Showing " + focus.name + "."
-      : "");
+    const notice = document.querySelector("#origin-notice");
+    if (!fromResize) notice.textContent = "";
+    if (previousOrigin && previousOrigin !== focus.origin) {
+      notice.textContent = "Country changed: " + originNames.get(previousOrigin) +
+        " is outside the top six for " + hts8542.get(tradeView.hts).name +
+        " in " + tradeView.year + ". Now showing " + focus.name + ".";
+    }
+    document.querySelector("#dashboard").style.setProperty("--notice-offset",
+      notice.textContent ? notice.getBoundingClientRect().height + 12 + "px" : "0px");
     yearMenu.property("value", tradeView.year);
     htsMenu.property("value", tradeView.hts);
     d3.select("#dashboard").style("--product-color", hts8542.get(tradeView.hts).color);
@@ -164,7 +170,9 @@ async function loadCensusImports() {
     const base = byYearHts.get(baselineYear).get(tradeView.hts);
     const coverage = d3.sum(leaders, row => row.value) / usValue;
     d3.select("#rank-context").text(hts8542.get(tradeView.hts).name + " · Top six in " +
-      tradeView.year + " account for " + pct(coverage) + " of U.S. import value");
+      tradeView.year + ": " + pct(coverage) + " of U.S. import value · Other origins combined: " +
+      pct(1 - coverage));
+    d3.select("#rank-change-key").property("hidden", baselineOnly);
     d3.select("#rank-legend").text(baselineOnly
       ? "○ " + baselineYear + " baseline"
       : "○ " + baselineYear + " · ● " + tradeView.year + " · pp = percentage points");
@@ -317,6 +325,15 @@ async function loadCensusImports() {
       .attr("x1", yearX(tradeView.year)).attr("x2", yearX(tradeView.year))
       .attr("y1", 12).attr("y2", bottom);
 
+    const referenceEnd = history.at(-1);
+    const originEnd = history.filter(row => row.focus !== null).at(-1);
+    let referenceLabelY = Math.max(24, y(referenceEnd.total) - 10);
+    let originLabelY = originEnd ? Math.max(24, y(originEnd.focus) - 10) : null;
+    if (originEnd && Math.abs(originLabelY - referenceLabelY) < 24) {
+      referenceLabelY = Math.max(24, Math.min(referenceLabelY, originLabelY) - 12);
+      originLabelY = Math.min(bottom - 6, referenceLabelY + 24);
+    }
+
     for (const key of ["total", "focus"]) {
       const layer = svg.append("g").attr("class", "history-series history-" + key);
       const line = d3.line().defined(row => row[key] !== null)
@@ -325,6 +342,15 @@ async function loadCensusImports() {
       layer.append("path").datum(history).attr("d", line);
       layer.selectAll("circle").data(history.filter(row => row[key] !== null)).join("circle")
         .attr("cx", row => yearX(row.year)).attr("cy", row => y(row[key])).attr("r", 3);
+
+      const endpoint = key === "total" ? referenceEnd : originEnd;
+      if (endpoint) {
+        layer.append("text").attr("class", "history-series-label")
+          .attr("x", yearX(endpoint.year) - 8)
+          .attr("y", key === "total" ? referenceLabelY : originLabelY)
+          .attr("text-anchor", "end")
+          .text(key === "total" ? (shareMode ? "Top-three share" : "All origins total") : origin);
+      }
     }
 
     d3.select("#history-context").text(hts8542.get(tradeView.hts).name + " · " +
@@ -401,7 +427,26 @@ async function loadCensusImports() {
   refreshTradeViews();
   d3.select("#load-message").property("hidden", true);
 
-  const resize = new ResizeObserver(refreshTradeViews);
+  const mixPanel = document.querySelector("#product-mix-panel");
+  const mixButton = document.querySelector("#view-mix");
+  mixButton.addEventListener("click", () => {
+    document.querySelector("#mix-title").focus({ preventScroll: true });
+    mixPanel.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start"
+    });
+  });
+  const mixObserver = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting || entry.boundingClientRect.bottom <= 0) {
+      mixButton.hidden = true;
+      mixObserver.disconnect();
+    } else {
+      mixButton.hidden = entry.boundingClientRect.top < document.documentElement.clientHeight;
+    }
+  });
+  mixObserver.observe(mixPanel);
+
+  const resize = new ResizeObserver(() => refreshTradeViews(true));
   resize.observe(document.querySelector("#history-plot"));
   resize.observe(document.querySelector("#rank-axis"));
 }
